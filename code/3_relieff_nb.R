@@ -1,0 +1,370 @@
+rm(list = ls())
+setwd("D:/workspace_R/thalas/")
+library(xgboost)
+library(caret)
+library(mgcv)
+library(feather)
+library(e1071)
+library(naivebayes)
+# load("D:/workspace_R/thalas/20180304/dataset/snp_clean.RData")
+load("D:/workspace_R/thalas/20180427/dataset/snp_missing_1per_numeric.RData")
+
+set.seed(546789)
+indexFolds <- createFolds(snp.clean$case,5)
+snp.fold1 <- snp.clean[indexFolds$Fold1,]
+snp.fold2 <- snp.clean[indexFolds$Fold2,]
+snp.fold3 <- snp.clean[indexFolds$Fold3,]
+snp.fold4 <- snp.clean[indexFolds$Fold4,]
+snp.fold5 <- snp.clean[indexFolds$Fold5,]
+
+tr <- rbind(snp.fold2,snp.fold3,snp.fold4)
+val <- snp.fold1
+
+te <- snp.fold5
+
+
+### blind
+
+tr.x <- tr[, !(colnames(tr) %in% c("case"))]
+tr.y <- data.frame(tr$case)
+
+val.x <- val[, !(colnames(val) %in% c("case"))]
+val.y <- data.frame(val$case)
+
+te.x <- te[, !(colnames(te) %in% c("case"))]
+te.y <- data.frame(te$case)
+
+# sum(val.y$val.case)/length(val.y$val.case)
+
+
+k.value <- c(5,10,15,20,25,50,100)
+
+for (k in 1:length(k.value)){
+  importance <- read.csv(file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\relieff_val_fold1_blind5_k',k.value[k],'.csv',sep=""),header = F)
+  importance$nm <- colnames(tr.x)
+  colnames(importance) <- c('score','nm')  
+  
+  importance <- importance[order(-importance$score),] 
+  
+  
+  
+  # param.c <- c(0.0001,0.001,0.01,0.1,1.0,10,100,1000,10000)
+  
+  accu <- data.frame(V1 = numeric())
+  accu <- rbind(accu,0)
+  
+  param <- data.frame(V1 = numeric())
+  param <- rbind(param,0)
+  
+  i.tmp <- data.frame(V1 = numeric())
+  i.tmp <- rbind(i.tmp,0)
+  
+  for (i in 2:500){
+    
+    xx <- 1:i
+    
+    tr.fe <- tr.x[,importance$nm[xx]]
+    te.fe <- val.x[,importance$nm[xx]]
+    
+    model <- naive_bayes(x = tr.fe,y = tr.y$tr.case, usekernel = TRUE)
+    result <- predict(model,te.fe)
+    
+    acc <- confusionMatrix(reference = val.y$val.case,result)
+    
+    
+    accu <- rbind(accu,acc$overall[1])
+    i.tmp <- rbind(i.tmp,i)
+    print('###')
+    print(i)
+    # print(param.c[k.for])
+    print(acc$overall[1])
+    
+  }
+  tmp.write <- cbind(accu,i.tmp)
+  colnames(tmp.write) <- c('accu','fe')
+  write.csv(x = tmp.write, file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\nb\\result_relieff_nb_val1_test5_k',k.value[k],'.csv'),row.names = F)
+  
+  
+}
+
+
+################################# 2 
+
+rm(list = ls())
+setwd("D:/workspace_R/thalas/")
+library(xgboost)
+library(caret)
+library(mgcv)
+library(feather)
+library(e1071)
+library(naivebayes)
+# load("D:/workspace_R/thalas/20180304/dataset/snp_clean.RData")
+load("D:/workspace_R/thalas/20180427/dataset/snp_missing_1per_numeric.RData")
+
+set.seed(546789)
+indexFolds <- createFolds(snp.clean$case,5)
+snp.fold1 <- snp.clean[indexFolds$Fold1,]
+snp.fold2 <- snp.clean[indexFolds$Fold2,]
+snp.fold3 <- snp.clean[indexFolds$Fold3,]
+snp.fold4 <- snp.clean[indexFolds$Fold4,]
+snp.fold5 <- snp.clean[indexFolds$Fold5,]
+
+tr <- rbind(snp.fold1,snp.fold3,snp.fold4)
+val <- snp.fold2
+
+te <- snp.fold5
+
+
+### blind
+
+tr.x <- tr[, !(colnames(tr) %in% c("case"))]
+tr.y <- data.frame(tr$case)
+
+val.x <- val[, !(colnames(val) %in% c("case"))]
+val.y <- data.frame(val$case)
+
+te.x <- te[, !(colnames(te) %in% c("case"))]
+te.y <- data.frame(te$case)
+
+# sum(val.y$val.case)/length(val.y$val.case)
+
+
+k.value <- c(5,10,15,20,25,50,100)
+
+for (k in 1:length(k.value)){
+  importance <- read.csv(file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\relieff_val_fold2_blind5_k',k.value[k],'.csv',sep=""),header = F)
+  importance$nm <- colnames(tr.x)
+  colnames(importance) <- c('score','nm')  
+  
+  importance <- importance[order(-importance$score),] 
+  
+  
+  
+  # param.c <- c(0.0001,0.001,0.01,0.1,1.0,10,100,1000,10000)
+  
+  accu <- data.frame(V1 = numeric())
+  accu <- rbind(accu,0)
+  
+  param <- data.frame(V1 = numeric())
+  param <- rbind(param,0)
+  
+  i.tmp <- data.frame(V1 = numeric())
+  i.tmp <- rbind(i.tmp,0)
+  
+  for (i in 2:500){
+    
+    xx <- 1:i
+    
+    tr.fe <- tr.x[,importance$nm[xx]]
+    te.fe <- val.x[,importance$nm[xx]]
+    
+    model <- naive_bayes(x = tr.fe,y = tr.y$tr.case, usekernel = TRUE)
+    result <- predict(model,te.fe)
+    
+    acc <- confusionMatrix(reference = val.y$val.case,result)
+    
+    
+    accu <- rbind(accu,acc$overall[1])
+    i.tmp <- rbind(i.tmp,i)
+    print('###')
+    print(i)
+    # print(param.c[k.for])
+    print(acc$overall[1])
+    
+  }
+  tmp.write <- cbind(accu,i.tmp)
+  colnames(tmp.write) <- c('accu','fe')
+  write.csv(x = tmp.write, file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\nb\\result_relieff_nb_val2_test5_k',k.value[k],'.csv'),row.names = F)
+  
+  
+}
+
+
+
+
+################################# 3 
+
+rm(list = ls())
+setwd("D:/workspace_R/thalas/")
+library(xgboost)
+library(caret)
+library(mgcv)
+library(feather)
+library(e1071)
+library(naivebayes)
+# load("D:/workspace_R/thalas/20180304/dataset/snp_clean.RData")
+load("D:/workspace_R/thalas/20180427/dataset/snp_missing_1per_numeric.RData")
+
+set.seed(546789)
+indexFolds <- createFolds(snp.clean$case,5)
+snp.fold1 <- snp.clean[indexFolds$Fold1,]
+snp.fold2 <- snp.clean[indexFolds$Fold2,]
+snp.fold3 <- snp.clean[indexFolds$Fold3,]
+snp.fold4 <- snp.clean[indexFolds$Fold4,]
+snp.fold5 <- snp.clean[indexFolds$Fold5,]
+
+tr <- rbind(snp.fold1,snp.fold2,snp.fold4)
+val <- snp.fold3
+
+te <- snp.fold5
+
+
+### blind
+
+tr.x <- tr[, !(colnames(tr) %in% c("case"))]
+tr.y <- data.frame(tr$case)
+
+val.x <- val[, !(colnames(val) %in% c("case"))]
+val.y <- data.frame(val$case)
+
+te.x <- te[, !(colnames(te) %in% c("case"))]
+te.y <- data.frame(te$case)
+
+# sum(val.y$val.case)/length(val.y$val.case)
+
+
+k.value <- c(5,10,15,20,25,50,100)
+
+for (k in 1:length(k.value)){
+  importance <- read.csv(file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\relieff_val_fold3_blind5_k',k.value[k],'.csv',sep=""),header = F)
+  importance$nm <- colnames(tr.x)
+  colnames(importance) <- c('score','nm')  
+  
+  importance <- importance[order(-importance$score),] 
+  
+  
+  
+  # param.c <- c(0.0001,0.001,0.01,0.1,1.0,10,100,1000,10000)
+  
+  accu <- data.frame(V1 = numeric())
+  accu <- rbind(accu,0)
+  
+  param <- data.frame(V1 = numeric())
+  param <- rbind(param,0)
+  
+  i.tmp <- data.frame(V1 = numeric())
+  i.tmp <- rbind(i.tmp,0)
+  
+  for (i in 2:500){
+    
+    xx <- 1:i
+    
+    tr.fe <- tr.x[,importance$nm[xx]]
+    te.fe <- val.x[,importance$nm[xx]]
+    
+    model <- naive_bayes(x = tr.fe,y = tr.y$tr.case, usekernel = TRUE)
+    result <- predict(model,te.fe)
+    
+    acc <- confusionMatrix(reference = val.y$val.case,result)
+    
+    
+    accu <- rbind(accu,acc$overall[1])
+    i.tmp <- rbind(i.tmp,i)
+    print('###')
+    print(i)
+    # print(param.c[k.for])
+    print(acc$overall[1])
+    
+  }
+  tmp.write <- cbind(accu,i.tmp)
+  colnames(tmp.write) <- c('accu','fe')
+  write.csv(x = tmp.write, file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\nb\\result_relieff_nb_val3_test5_k',k.value[k],'.csv'),row.names = F)
+  
+  
+}
+
+
+
+
+
+
+################################# 4
+
+rm(list = ls())
+setwd("D:/workspace_R/thalas/")
+library(xgboost)
+library(caret)
+library(mgcv)
+library(feather)
+library(e1071)
+library(naivebayes)
+# load("D:/workspace_R/thalas/20180304/dataset/snp_clean.RData")
+load("D:/workspace_R/thalas/20180427/dataset/snp_missing_1per_numeric.RData")
+
+set.seed(546789)
+indexFolds <- createFolds(snp.clean$case,5)
+snp.fold1 <- snp.clean[indexFolds$Fold1,]
+snp.fold2 <- snp.clean[indexFolds$Fold2,]
+snp.fold3 <- snp.clean[indexFolds$Fold3,]
+snp.fold4 <- snp.clean[indexFolds$Fold4,]
+snp.fold5 <- snp.clean[indexFolds$Fold5,]
+
+tr <- rbind(snp.fold1,snp.fold2,snp.fold3)
+val <- snp.fold4
+
+te <- snp.fold5
+
+
+### blind
+
+tr.x <- tr[, !(colnames(tr) %in% c("case"))]
+tr.y <- data.frame(tr$case)
+
+val.x <- val[, !(colnames(val) %in% c("case"))]
+val.y <- data.frame(val$case)
+
+te.x <- te[, !(colnames(te) %in% c("case"))]
+te.y <- data.frame(te$case)
+
+# sum(val.y$val.case)/length(val.y$val.case)
+
+
+k.value <- c(5,10,15,20,25,50,100)
+
+for (k in 1:length(k.value)){
+  importance <- read.csv(file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\relieff_val_fold4_blind5_k',k.value[k],'.csv',sep=""),header = F)
+  importance$nm <- colnames(tr.x)
+  colnames(importance) <- c('score','nm')  
+  
+  importance <- importance[order(-importance$score),] 
+  
+  
+  
+  # param.c <- c(0.0001,0.001,0.01,0.1,1.0,10,100,1000,10000)
+  
+  accu <- data.frame(V1 = numeric())
+  accu <- rbind(accu,0)
+  
+  param <- data.frame(V1 = numeric())
+  param <- rbind(param,0)
+  
+  i.tmp <- data.frame(V1 = numeric())
+  i.tmp <- rbind(i.tmp,0)
+  
+  for (i in 2:500){
+    
+    xx <- 1:i
+    
+    tr.fe <- tr.x[,importance$nm[xx]]
+    te.fe <- val.x[,importance$nm[xx]]
+    
+    model <- naive_bayes(x = tr.fe,y = tr.y$tr.case, usekernel = TRUE)
+    result <- predict(model,te.fe)
+    
+    acc <- confusionMatrix(reference = val.y$val.case,result)
+    
+    
+    accu <- rbind(accu,acc$overall[1])
+    i.tmp <- rbind(i.tmp,i)
+    print('###')
+    print(i)
+    # print(param.c[k.for])
+    print(acc$overall[1])
+    
+  }
+  tmp.write <- cbind(accu,i.tmp)
+  colnames(tmp.write) <- c('accu','fe')
+  write.csv(x = tmp.write, file = paste0('D:\\workspace_R\\thalas\\20180427\\result\\relieff\\nb\\result_relieff_nb_val4_test5_k',k.value[k],'.csv'),row.names = F)
+  
+  
+}
